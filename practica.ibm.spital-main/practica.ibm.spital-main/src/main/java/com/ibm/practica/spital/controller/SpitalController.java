@@ -1,22 +1,33 @@
 package com.ibm.practica.spital.controller;
 
+import com.ibm.practica.spital.DTOs.Pacients;
+import com.ibm.practica.spital.DTOs.Reservation;
+import com.ibm.practica.spital.service.SpitalService;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Log4j2
 @RestController
 @RequestMapping("/spital")
 public class SpitalController {
 
-    @GetMapping("/all")
-    public String getAllPacients(){
+    @Autowired
+    private SpitalService service;
+    @GetMapping("/getAllPacients")
+    public List<Pacients> getAllPacients(){
         log.info("getAllPacients has started...");
-        return "Test";
+        List<Pacients> result=service.getAllPacients();
+
+        log.info("getAllPacients has finished...");
+        return result;
     }
 
-    @GetMapping("/reservations")
-    public String getReservations(){
-        return "Reservations";
+    @GetMapping("/allReservations")
+    public List<Reservation> getReservations(){
+        return service.getAllReservations();
     }
 
     @GetMapping("/reservation")
