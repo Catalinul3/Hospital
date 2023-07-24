@@ -69,13 +69,21 @@ public class SpitalService {
     public Reservation editReservation(String id,String spec,LocalDateTime time)
     {  List<Reservation>list=getAllReservations();
         Reservation newReservation=new Reservation();
-        for(Reservation reservation:list)
+       /* for(Reservation reservation:list)
         {
             if(reservation.getId().equals(id))
             {reservation.setReservationDate(time);
               reservation.setSpecialization(spec);
               newReservation=reservation;
             }
+        }
+        Old Style*/
+        newReservation=list.stream().filter(reservation -> id.equals(reservation.getId()))
+                .findAny().orElse(null);
+        if(newReservation!=null)
+        {
+            newReservation.setReservationDate(time);
+            newReservation.setSpecialization(spec);
         }
         return newReservation;
     }
