@@ -3,7 +3,9 @@ package com.ibm.practica.spital.service;
 import com.ibm.practica.spital.DTOs.AddReservation;
 import com.ibm.practica.spital.DTOs.Pacients;
 import com.ibm.practica.spital.DTOs.Reservation;
+import com.ibm.practica.spital.DTOs.Section;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.naming.spi.ResolveResult;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
 @Service
 @Log4j2
 public class SpitalService {
+    private List<Section>sections;
     public List<Pacients> getAllPacients()
     {log.info("Service called getAllPacients");
         Pacients p= new Pacients();
@@ -24,7 +27,7 @@ public class SpitalService {
         Pacients p2=new Pacients();
         p2.setPacientID("456");
         p2.setFirstName("Constantin");
-        return List.of(p);
+        return List.of(p,p2);
     }
     public List<Reservation>getAllReservations()
     {
@@ -86,6 +89,64 @@ public class SpitalService {
             newReservation.setSpecialization(spec);
         }
         return newReservation;
+    }
+    public List<Section> getAllSections()
+    {
+      /*  Section s=new Section();
+        s.setId("C2");
+        s.setSpecializationName("Cardiologie");
+        s.setNumberOfDoctors(2);
+        s.setNumberOfPacients(5);
+        Section s2=new Section();
+        s2.setId("N1");
+        s2.setSpecializationName("Neurologie");
+        s2.setNumberOfPacients(7);
+        s2.setNumberOfDoctors(4);
+
+        sections.add(s);
+        sections.add(s2);*/
+        return sections;
+    }
+    public ResponseEntity addSection(Section section)
+    {   if(sections==null)
+    {
+        sections=new ArrayList<>();
+    }
+    else
+    {        sections=getAllSections();}
+        if(section!=null)
+        {
+            sections.add(section);
+            return ResponseEntity.ok(section.getSpecializationName()+"has been added");
+        }
+        return ResponseEntity.badRequest().body("Invalid section data. Section cannot be null.");
+    }
+    public Section editSection(String id,String name,int doctors, int pacients)
+    {sections=getAllSections();
+        Section newSection=new Section();
+        newSection=sections.stream().filter(section -> id.equals(section.getId()))
+                .findAny().orElse(null);
+        if(newSection!=null)
+        {
+            newSection.setNumberOfDoctors(doctors);
+            newSection.setNumberOfPacients(pacients);
+            newSection.setSpecializationName(name);
+        }
+        return newSection;
+    }
+    public ResponseEntity deleteSection(String id)
+    {
+      sections=getAllSections();
+        Section sectionToDelete=new Section();
+        sectionToDelete=sections.stream().filter(section -> id.equals(section.getId()))
+                .findAny().orElse(null);
+        if(sectionToDelete!=null)
+        {
+            sections.remove(sectionToDelete);
+            return ResponseEntity.ok("Delete section"+sectionToDelete.getSpecializationName());
+
+        }
+        return ResponseEntity.badRequest().body(" Invalid section data. Section cannot be null.");
     }
 }
 
