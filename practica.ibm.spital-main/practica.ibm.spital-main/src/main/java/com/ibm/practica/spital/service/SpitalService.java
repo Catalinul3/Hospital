@@ -4,9 +4,12 @@ import com.ibm.practica.spital.DTOs.AddReservation;
 import com.ibm.practica.spital.DTOs.Pacients;
 import com.ibm.practica.spital.DTOs.Reservation;
 import com.ibm.practica.spital.DTOs.Section;
+import com.ibm.practica.spital.repository.PacientRepo;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.modelmapper.ModelMapper;
 
 import javax.naming.spi.ResolveResult;
 import java.time.LocalDateTime;
@@ -15,20 +18,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 @Service
 @Log4j2
 public class SpitalService {
     private List<Section>sections;
+    @Autowired
+    PacientRepo pacientRepo;
+
+    ModelMapper mapper=new ModelMapper();
     public List<Pacients> getAllPacients()
     {log.info("Service called getAllPacients");
-        Pacients p= new Pacients();
-        p.setPacientID("123");
+       /* Pacients p= new Pacients();
+
         p.setFirstName("Catalin");
         Pacients p2=new Pacients();
-        p2.setPacientID("456");
+
         p2.setFirstName("Constantin");
-        return List.of(p,p2);
+        return List.of(p,p2); */
+    return pacientRepo.findAll().stream().map(pacient -> mapper.map(pacient,Pacients.class))
+            .collect(Collectors.toList());
+
     }
+
     public List<Reservation>getAllReservations()
     {
         log.info("Service called getAllPacients");
@@ -36,7 +48,7 @@ public class SpitalService {
         r.setId("123");
         r.setSpecialization("IDk");
         Pacients p2=new Pacients();
-        p2.setPacientID("456");
+
         p2.setFirstName("Constantin");
         return List.of(r);
     }
@@ -113,11 +125,13 @@ public class SpitalService {
         sections=new ArrayList<>();
     }
     else
-    {        sections=getAllSections();}
+    {
+        sections=getAllSections();
+    }
         if(section!=null)
         {
             sections.add(section);
-            return ResponseEntity.ok(section.getSpecializationName()+"has been added");
+            return ResponseEntity.ok(section.getSpecializationName()+" has been added");
         }
         return ResponseEntity.badRequest().body("Invalid section data. Section cannot be null.");
     }
@@ -147,6 +161,13 @@ public class SpitalService {
 
         }
         return ResponseEntity.badRequest().body(" Invalid section data. Section cannot be null.");
+    }
+    public boolean addPacient(Pacients pacient)
+    {
+        return true;
+    }
+    public boolean deletePacient(String reservationID){
+        return false;
     }
 }
 

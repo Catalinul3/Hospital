@@ -50,14 +50,14 @@ public class SpitalController {
         return ResponseEntity.of(Optional.ofNullable(service.getReservationForPacient(pacientID)));
     }
     @PostMapping("/addReservation")
-    public ResponseEntity addReservation(AddReservation reservation){
+    public ResponseEntity addReservation(@RequestBody AddReservation reservation){
 
         return service.addReservation(reservation) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/addPacient")
-    public String addPacient(){
-        return "Pacient added";
+    public ResponseEntity<Object> addPacient(@RequestBody Pacients pacient){
+        return service.addPacient(pacient) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/deleteReservation")
@@ -70,9 +70,9 @@ public class SpitalController {
         return service.deleteReservation(reservationID) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/deletePacient")
-    public String deletePacient(){
-        return "Pacient deleted";
+    @DeleteMapping("/deletePacient{reservationID}")
+    public ResponseEntity deletePacient(@RequestBody String reservationID){
+        return service.deleteReservation(reservationID) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/editPacient")
