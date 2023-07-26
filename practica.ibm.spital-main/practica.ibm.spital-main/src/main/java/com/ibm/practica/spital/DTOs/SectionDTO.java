@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Section {
+public class SectionDTO {
     public String id;
     public String specializationName;
     public int numberOfDoctors;

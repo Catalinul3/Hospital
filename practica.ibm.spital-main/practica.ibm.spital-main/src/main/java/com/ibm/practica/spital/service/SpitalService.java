@@ -3,17 +3,17 @@ package com.ibm.practica.spital.service;
 import com.ibm.practica.spital.DTOs.AddReservation;
 import com.ibm.practica.spital.DTOs.Pacients;
 import com.ibm.practica.spital.DTOs.Reservation;
-import com.ibm.practica.spital.DTOs.Section;
+import com.ibm.practica.spital.DTOs.SectionDTO;
+import com.ibm.practica.spital.entities.Section;
 import com.ibm.practica.spital.repository.PacientRepo;
+import com.ibm.practica.spital.repository.SectionRepo;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 
-import javax.naming.spi.ResolveResult;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,9 +22,11 @@ import java.util.stream.Collectors;
 @Service
 @Log4j2
 public class SpitalService {
-    private List<Section>sections;
+    private List<SectionDTO>sections;
     @Autowired
     PacientRepo pacientRepo;
+    @Autowired
+    SectionRepo sectionRepo;
 
     ModelMapper mapper=new ModelMapper();
     public List<Pacients> getAllPacients()
@@ -39,6 +41,24 @@ public class SpitalService {
     return pacientRepo.findAll().stream().map(pacient -> mapper.map(pacient,Pacients.class))
             .collect(Collectors.toList());
 
+    }
+    public List<SectionDTO> getAllSections()
+    {
+      /*  Section s=new Section();
+        s.setId("C2");
+        s.setSpecializationName("Cardiologie");
+        s.setNumberOfDoctors(2);
+        s.setNumberOfPacients(5);
+        Section s2=new Section();
+        s2.setId("N1");
+        s2.setSpecializationName("Neurologie");
+        s2.setNumberOfPacients(7);
+        s2.setNumberOfDoctors(4);
+
+        sections.add(s);
+        sections.add(s2);*/
+        return sectionRepo.findAll().stream().map(section -> mapper.map(section,SectionDTO.class))
+                .collect(Collectors.toList());
     }
 
     public List<Reservation>getAllReservations()
@@ -102,24 +122,8 @@ public class SpitalService {
         }
         return newReservation;
     }
-    public List<Section> getAllSections()
-    {
-      /*  Section s=new Section();
-        s.setId("C2");
-        s.setSpecializationName("Cardiologie");
-        s.setNumberOfDoctors(2);
-        s.setNumberOfPacients(5);
-        Section s2=new Section();
-        s2.setId("N1");
-        s2.setSpecializationName("Neurologie");
-        s2.setNumberOfPacients(7);
-        s2.setNumberOfDoctors(4);
 
-        sections.add(s);
-        sections.add(s2);*/
-        return sections;
-    }
-    public ResponseEntity addSection(Section section)
+    public ResponseEntity addSection(SectionDTO section)
     {   if(sections==null)
     {
         sections=new ArrayList<>();
@@ -135,9 +139,9 @@ public class SpitalService {
         }
         return ResponseEntity.badRequest().body("Invalid section data. Section cannot be null.");
     }
-    public Section editSection(String id,String name,int doctors, int pacients)
+    public SectionDTO editSection(String id,String name,int doctors, int pacients)
     {sections=getAllSections();
-        Section newSection=new Section();
+        SectionDTO newSection= new SectionDTO();
         newSection=sections.stream().filter(section -> id.equals(section.getId()))
                 .findAny().orElse(null);
         if(newSection!=null)
@@ -151,7 +155,7 @@ public class SpitalService {
     public ResponseEntity deleteSection(String id)
     {
       sections=getAllSections();
-        Section sectionToDelete=new Section();
+        SectionDTO sectionToDelete=new SectionDTO();
         sectionToDelete=sections.stream().filter(section -> id.equals(section.getId()))
                 .findAny().orElse(null);
         if(sectionToDelete!=null)

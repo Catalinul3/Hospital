@@ -3,7 +3,8 @@ package com.ibm.practica.spital.controller;
 import com.ibm.practica.spital.DTOs.AddReservation;
 import com.ibm.practica.spital.DTOs.Pacients;
 import com.ibm.practica.spital.DTOs.Reservation;
-import com.ibm.practica.spital.DTOs.Section;
+import com.ibm.practica.spital.DTOs.SectionDTO;
+import com.ibm.practica.spital.entities.Section;
 import com.ibm.practica.spital.service.SpitalService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,16 +84,16 @@ public class SpitalController {
     @PutMapping("/editReservation")
     public Reservation editReservation(String id, String spec, LocalDateTime time){return service.editReservation(id,spec,time);}
     @GetMapping("/getAllSections")
-    public List<Section> getAllSections(){return service.getAllSections();}
+    public List<SectionDTO> getAllSections(){return service.getAllSections();}
     @GetMapping("/getAllNumberOfAvailableDoctors")
     public int getNumberOfDoctors(){return 0;
     }
     @PostMapping("/addSection")
-    public ResponseEntity addSection(Section section){
+    public ResponseEntity addSection(SectionDTO section){
        return service.addSection(section);
     }
     @PutMapping("/editSection")
-    public Section editSection(String id,String name,int doc,int pac){
+    public SectionDTO editSection(String id, String name, int doc, int pac){
         return service.editSection(id,name,doc,pac);
     }
     @DeleteMapping("/deleteSection")
