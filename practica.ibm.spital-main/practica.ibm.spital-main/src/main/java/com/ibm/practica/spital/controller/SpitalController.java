@@ -1,20 +1,17 @@
 package com.ibm.practica.spital.controller;
 
-import com.ibm.practica.spital.DTOs.AddReservation;
-import com.ibm.practica.spital.DTOs.Pacients;
-import com.ibm.practica.spital.DTOs.Reservation;
-import com.ibm.practica.spital.DTOs.SectionDTO;
-import com.ibm.practica.spital.entities.Section;
+import com.ibm.practica.spital.DTOs.*;
+import com.ibm.practica.spital.repository.ReservationRepo;
 import com.ibm.practica.spital.service.SpitalService;
+import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Log4j2
 @RestController
@@ -23,6 +20,8 @@ public class SpitalController {
 
     @Autowired
     private SpitalService service;
+
+
     @GetMapping("/getAllPacients")
     public List<Pacients> getAllPacients(){
         log.info("getAllPacients has started...");
@@ -33,65 +32,67 @@ public class SpitalController {
     }
 
     @GetMapping("/allReservations")
-    public List<Reservation> getReservations(){
+    public List<ReservationDTO> getReservations(){
         return service.getAllReservations();
     }
 
     @GetMapping("/reservation")
-    public Reservation getReservationForPacient(int id){
-        return service.getReservation();
+    public ResponseEntity<ReservationDTO> getReservation(@RequestBody String resID)
+    {
+        ReservationDTO result=service.getReservation(resID);
+        if(ObjectUtils.isEmpty(result))
+        {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(result);
     }
     @GetMapping("/getPacientReservation")
-    public ResponseEntity<List<Reservation>> getReservationForPacient(String pacientID){
+    public List<ReservationDTO> getReservationForPacient(String pacientID){
 
-        if(service.getReservationForPacient(pacientID).isEmpty()){
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-        }
-
-        return ResponseEntity.of(Optional.ofNullable(service.getReservationForPacient(pacientID)));
-    }
+return service.getReservationForPacient(pacientID);
+   }
     @PostMapping("/addReservation")
-    public ResponseEntity addReservation(@RequestBody AddReservation reservation){
+    public ResponseEntity addReservation(@RequestBody AddReservationDTO reservation){
 
         return service.addReservation(reservation) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
     @PostMapping("/addPacient")
-    public ResponseEntity<Object> addPacient(@RequestBody Pacients pacient){
-        return service.addPacient(pacient) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    public ResponseEntity<Object> addPacient(@RequestBody @Valid AddPacientDTO pacient){
+        log.info("addPacient() started for : " + pacient);
+        return service.addPacient(pacient) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
-
+    @PostMapping("/addSection")
+    public ResponseEntity<Object> addSection(@RequestBody @Valid AddSectionDTO section){
+        log.info("addSection() started for: "+section );
+        return service.addSection(section)?ResponseEntity.ok().build():ResponseEntity.badRequest().body("Invalid section. Section cannot be null");
+    }
     @DeleteMapping("/deleteReservation")
-    public ResponseEntity deleteReservation(String reservationID){
+    public ResponseEntity deleteReservation(@RequestParam String reservationID){
 
-        if(service.deleteReservation(reservationID)){
-            ResponseEntity.ok().build();
-        } else ResponseEntity.notFound().build();
-
-        return service.deleteReservation(reservationID) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        service.deleteReservation(reservationID);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deletePacient{reservationID}")
-    public ResponseEntity deletePacient(@RequestBody String reservationID){
-        return service.deleteReservation(reservationID) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+    public ResponseEntity deletePacient(@RequestParam String pacientID){
+        return service.deletePacient(pacientID) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 
     @PutMapping("/editPacient")
-    public String editPacient(){
-        return "Pacient edited";
+    public ResponseEntity editPacient(@RequestBody Pacients pacientDTO){
+        return service.editPacient(pacientDTO) ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+
     }
 
     @PutMapping("/editReservation")
-    public Reservation editReservation(String id, String spec, LocalDateTime time){return service.editReservation(id,spec,time);}
+    public ReservationDTO editReservation(String id, String spec, LocalDateTime time){return service.editReservation(id,spec,time);}
     @GetMapping("/getAllSections")
     public List<SectionDTO> getAllSections(){return service.getAllSections();}
     @GetMapping("/getAllNumberOfAvailableDoctors")
     public int getNumberOfDoctors(){return 0;
     }
-    @PostMapping("/addSection")
-    public ResponseEntity addSection(SectionDTO section){
-       return service.addSection(section);
-    }
+
     @PutMapping("/editSection")
     public SectionDTO editSection(String id, String name, int doc, int pac){
         return service.editSection(id,name,doc,pac);

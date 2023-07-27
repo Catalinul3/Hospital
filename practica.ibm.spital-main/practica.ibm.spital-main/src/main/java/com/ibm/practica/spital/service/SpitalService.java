@@ -1,13 +1,14 @@
 package com.ibm.practica.spital.service;
 
-import com.ibm.practica.spital.DTOs.AddReservation;
-import com.ibm.practica.spital.DTOs.Pacients;
-import com.ibm.practica.spital.DTOs.Reservation;
-import com.ibm.practica.spital.DTOs.SectionDTO;
+import com.ibm.practica.spital.DTOs.*;
+import com.ibm.practica.spital.entities.Pacient;
+import com.ibm.practica.spital.entities.Reservation;
 import com.ibm.practica.spital.entities.Section;
 import com.ibm.practica.spital.repository.PacientRepo;
+import com.ibm.practica.spital.repository.ReservationRepo;
 import com.ibm.practica.spital.repository.SectionRepo;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.modelmapper.ModelMapper;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -27,6 +29,8 @@ public class SpitalService {
     PacientRepo pacientRepo;
     @Autowired
     SectionRepo sectionRepo;
+    @Autowired
+    ReservationRepo reservationRepo;
 
     ModelMapper mapper=new ModelMapper();
     public List<Pacients> getAllPacients()
@@ -57,53 +61,53 @@ public class SpitalService {
 
         sections.add(s);
         sections.add(s2);*/
+
         return sectionRepo.findAll().stream().map(section -> mapper.map(section,SectionDTO.class))
                 .collect(Collectors.toList());
     }
 
-    public List<Reservation>getAllReservations()
+    public List<ReservationDTO>getAllReservations()
     {
         log.info("Service called getAllPacients");
-        Reservation r= new Reservation();
-        r.setId("123");
-        r.setSpecialization("IDk");
-        Pacients p2=new Pacients();
 
-        p2.setFirstName("Constantin");
-        return List.of(r);
+        return reservationRepo.findAll().stream()
+                .map(reservation -> mapper.map(reservation,ReservationDTO.class)).collect(Collectors.toList());
     }
-    public Reservation getReservation(){
+    public ReservationDTO getReservation(String reservationID)
+    {
         log.info("SpitalService.getReservation() retrieving all reservations...");
-        Reservation p = new Reservation();
-        p.setId("12");
-        p.setPacientID("12313");
-        return p;
-    }
-    public List<Reservation> getReservationForPacient(String pacientID){
-        log.info("SpitalService.getReservations() retrieving all reservations...");
-        Reservation p = new Reservation();
-        p.setId("12");
-        p.setPacientID("12313");
-        Reservation p1 = new Reservation();
-        p1.setPacientID("12314");
-        p1.setId("123");
-        List<Reservation> list = new ArrayList<>();
-        list.add(p);
-        list.add(p1);
 
-        return list.stream().filter(r -> r.getPacientID().equals(pacientID)).collect(Collectors.toList());
+        return reservationRepo.findById(reservationID)
+                .map(reservation -> mapper.map(reservation,ReservationDTO.class)).orElse(null);
+    }
+    public List<ReservationDTO>getReservationForPacient(String pacientID)
+    {
+        return reservationRepo.findAll().stream()
+                .filter(r->r.getPacientID().equals(pacientID))
+                .map(reservation ->mapper.map(reservation,ReservationDTO.class))
+                .collect(Collectors.toList());
     }
 
-    public boolean addReservation(AddReservation reservation){
-        return true;
+
+    public boolean addReservation(AddReservationDTO reservationDTO){
+        Reservation reservation=mapper.map(reservationDTO,Reservation.class);
+        String id=UUID.randomUUID().toString();
+        reservation.setId(id.replace("-",""));
+        reservation.setTime(LocalDateTime.now());
+        Reservation fromDb=reservationRepo.save(reservation);
+        log.info("addReservation() Reservation saved with ID:" + fromDb.getId());
+        return ObjectUtils.isNotEmpty(fromDb) ;
+
     }
 
-    public boolean deleteReservation(String reservationID){
-        return false;
+    public void deleteReservation(String reservationID){
+        log.info("deleteReservation() started.");
+        reservationRepo.deleteById(reservationID);
+        log.info("deleteReservation() finished.");
     }
-    public Reservation editReservation(String id,String spec,LocalDateTime time)
-    {  List<Reservation>list=getAllReservations();
-        Reservation newReservation=new Reservation();
+    public ReservationDTO editReservation(String id, String spec, LocalDateTime time)
+    {  List<ReservationDTO>list=getAllReservations();
+        ReservationDTO newReservationDTO =new ReservationDTO();
        /* for(Reservation reservation:list)
         {
             if(reservation.getId().equals(id))
@@ -113,31 +117,24 @@ public class SpitalService {
             }
         }
         Old Style*/
-        newReservation=list.stream().filter(reservation -> id.equals(reservation.getId()))
+        newReservationDTO =list.stream().filter(reservationDTO -> id.equals(reservationDTO.getId()))
                 .findAny().orElse(null);
-        if(newReservation!=null)
+        if(newReservationDTO !=null)
         {
-            newReservation.setReservationDate(time);
-            newReservation.setSpecialization(spec);
+            newReservationDTO.setReservationDate(time);
+            newReservationDTO.setSpecialization(spec);
         }
-        return newReservation;
+        return newReservationDTO;
     }
 
-    public ResponseEntity addSection(SectionDTO section)
-    {   if(sections==null)
+    public boolean addSection(AddSectionDTO sectionDTO)
     {
-        sections=new ArrayList<>();
-    }
-    else
-    {
-        sections=getAllSections();
-    }
-        if(section!=null)
-        {
-            sections.add(section);
-            return ResponseEntity.ok(section.getSpecializationName()+" has been added");
-        }
-        return ResponseEntity.badRequest().body("Invalid section data. Section cannot be null.");
+        Section section=mapper.map(sectionDTO,Section.class);
+        String id=UUID.randomUUID().toString();
+        section.setId(id.replace("-",""));
+        Section s=sectionRepo.save(section);
+        return ObjectUtils.isNotEmpty(s);
+
     }
     public SectionDTO editSection(String id,String name,int doctors, int pacients)
     {sections=getAllSections();
@@ -166,12 +163,25 @@ public class SpitalService {
         }
         return ResponseEntity.badRequest().body(" Invalid section data. Section cannot be null.");
     }
-    public boolean addPacient(Pacients pacient)
+    public boolean addPacient(AddPacientDTO pacient)
+    {
+        Pacient pt = mapper.map(pacient,Pacient.class);
+        String id = UUID.randomUUID().toString();
+        log.info("id is: " + id);
+        pacient.setPacientID(id.replace("-",""));
+        Pacient p = pacientRepo.save(pt);
+        log.info("saved pacient id is: " + p.getPacientID());
+        return ObjectUtils.isNotEmpty(p);
+    }
+    public boolean deletePacient(String pacientID){
+        int deletedRows = pacientRepo.deletePacient(pacientID);
+        log.info("deletePacient() deleted: " + deletedRows + " row(s)");
+        return deletedRows > 0;
+    }
+    public boolean editPacient(Pacients pacientDto)
     {
         return true;
     }
-    public boolean deletePacient(String reservationID){
-        return false;
-    }
+
 }
 
